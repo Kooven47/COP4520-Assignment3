@@ -21,25 +21,26 @@
 std::mutex mutex;
 
 // Generate an unordered of random numbers from 0 to size (exclusive)
-std::unique_ptr<std::unordered_set<int>> generateShuffledSet(int size)
+std::unordered_set<int> generateShuffledSet(int size)
 {
-    std::unique_ptr<std::vector<int>> vector = std::make_unique<std::vector<int>>();
+    std::vector<int> vector;
     for (int i = 0; i < size; i++)
     {
-        vector->push_back(i);
+        vector.push_back(i);
     }
 
     std::random_device rd;
     std::mt19937 g(rd());
 
-    std::shuffle(vector->begin(), vector->end(), g);
+    std::shuffle(vector.begin(), vector.end(), g);
 
-    return std::make_unique<std::unordered_set<int>>(vector->begin(), vector->end());
+    return std::unordered_set<int>(vector.begin(), vector.end());
 }
 
-void completeTasks(ConcurrentLinkedList* list, std::unordered_set<int>* giftBag, std::unordered_set<int>* cards)
+// Thread constructor was complaining, so I added &s here
+void completeTasks(ConcurrentLinkedList& list, std::unordered_set<int>& giftBag, std::unordered_set<int>& cards)
 {
-    while (cards->size() < NUM_GUESTS)
+    while (cards.size() < NUM_GUESTS)
     {
         int task = RandomNumberGenerator::generateRandomNumber(1, 3);
 
@@ -50,17 +51,17 @@ void completeTasks(ConcurrentLinkedList* list, std::unordered_set<int>* giftBag,
             {
                 mutex.lock();
 
-                if (giftBag->empty() || giftBag->begin() == giftBag->end())
+                if (giftBag.empty() || giftBag.begin() == giftBag.end())
                 {
                     mutex.unlock();
                     continue;
                 }
 
-                std::unordered_set<int>::iterator it = giftBag->begin();
+                std::unordered_set<int>::iterator it = giftBag.begin();
                 int value = *it;
-                giftBag->erase(it);
-                list->add(value);
-                std::cout << "Present added for guest " << value << std::endl;
+                giftBag.erase(it);
+                list.add(value);
+                // std::cout << "Present added for guest " << value << std::endl;
                 mutex.unlock();
 
                 break;
@@ -68,20 +69,20 @@ void completeTasks(ConcurrentLinkedList* list, std::unordered_set<int>* giftBag,
             // Take gift from list, write card for guest
             case WRITE_CARD:
             {
-                if (list->isEmpty())
+                if (list.isEmpty())
                 {
                     continue;
                 }
 
-                int guest = list->removeHead();
+                int guest = list.removeHead();
                 if (guest == -1)
                 {
                     continue;
                 }
 
                 mutex.lock();
-                cards->insert(guest);
-                std::cout << "Card written for guest " << guest << std::endl;
+                cards.insert(guest);
+                // std::cout << "Card written for guest " << guest << std::endl;
                 mutex.unlock();
 
                 break;
@@ -90,8 +91,8 @@ void completeTasks(ConcurrentLinkedList* list, std::unordered_set<int>* giftBag,
             case SEARCH_FOR_PRESENT:
             {
                 int guest = RandomNumberGenerator::generateRandomNumber(0, NUM_GUESTS - 1);
-                bool isFound = list->contains(guest);
-                std::cout << "Guest " << guest << " is " << (isFound ? "" : "not ") << "found" << std::endl;
+                bool isFound = list.contains(guest);
+                // std::cout << "Guest " << guest << " is " << (isFound ? "" : "not ") << "found" << std::endl;
                 
                 break;
             }
@@ -103,14 +104,15 @@ int main(void)
 {
     auto start = std::chrono::high_resolution_clock::now();
 
-    std::unique_ptr<ConcurrentLinkedList> presentsChain = std::make_unique<ConcurrentLinkedList>();
-    std::unique_ptr<std::unordered_set<int>> cards = std::make_unique<std::unordered_set<int>>();
-    std::unique_ptr<std::unordered_set<int>> giftBag = generateShuffledSet(NUM_GUESTS);
+    ConcurrentLinkedList presentsChain = ConcurrentLinkedList();
+    std::unordered_set<int> cards;
+    std::unordered_set<int> giftBag = generateShuffledSet(NUM_GUESTS);
     std::vector<std::thread> threads(NUM_THREADS);
 
     for (int i = 0; i < NUM_THREADS; i++)
     {
-        threads[i] = std::thread(completeTasks, presentsChain.get(), giftBag.get(), cards.get());
+        // Thread constructor was complaining, so I added std::ref here
+        threads[i] = std::thread(completeTasks, std::ref(presentsChain), std::ref(giftBag), std::ref(cards));
     }
 
     for (auto& thread : threads)
