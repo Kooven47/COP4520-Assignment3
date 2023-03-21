@@ -1,5 +1,5 @@
-#include "concurrentLinkedList.hpp"
-#include "randomNumberGenerator.hpp"
+#include "ConcurrentLinkedList.hpp"
+#include "RandomNumberGenerator.hpp"
 
 #include <mutex>
 #include <unordered_set>
@@ -20,7 +20,7 @@
 
 std::mutex mutex;
 
-// Generate an unordered of random numbers from 0 to size (exclusive)
+// Generate an unordered set of random numbers from 0 to size (exclusive)
 std::unordered_set<int> generateShuffledSet(int size)
 {
     std::vector<int> vector;
@@ -43,7 +43,6 @@ void completeTasks(ConcurrentLinkedList& list, std::unordered_set<int>& giftBag,
     while (cards.size() < NUM_GUESTS)
     {
         int task = RandomNumberGenerator::generateRandomNumber(1, 3);
-
         switch (task)
         {
             // Take gift from gift bag, add it to list
@@ -69,20 +68,22 @@ void completeTasks(ConcurrentLinkedList& list, std::unordered_set<int>& giftBag,
             // Take gift from list, write card for guest
             case WRITE_CARD:
             {
+                mutex.lock();
+
                 if (list.isEmpty())
                 {
+                    mutex.unlock();
                     continue;
                 }
-
                 int guest = list.removeHead();
                 if (guest == -1)
                 {
+                    mutex.unlock();
                     continue;
                 }
 
-                mutex.lock();
                 cards.insert(guest);
-                // std::cout << "Card written for guest " << guest << std::endl;
+                // std::cout << "Card written for guest " << guest << " by thread " << threadId << std::endl;
                 mutex.unlock();
 
                 break;
@@ -104,14 +105,14 @@ int main(void)
 {
     auto start = std::chrono::high_resolution_clock::now();
 
-    ConcurrentLinkedList presentsChain = ConcurrentLinkedList();
+    ConcurrentLinkedList presentsChain;
     std::unordered_set<int> cards;
     std::unordered_set<int> giftBag = generateShuffledSet(NUM_GUESTS);
     std::vector<std::thread> threads(NUM_THREADS);
 
     for (int i = 0; i < NUM_THREADS; i++)
     {
-        // Thread constructor was complaining, so I added std::ref here
+        // Pass by reference to make sure the threads are using the same objects
         threads[i] = std::thread(completeTasks, std::ref(presentsChain), std::ref(giftBag), std::ref(cards));
     }
 
