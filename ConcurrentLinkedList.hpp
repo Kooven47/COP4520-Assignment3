@@ -85,8 +85,6 @@ public:
         mutex.unlock();
     }
 
-    // void remove(int value);
-
     int removeHead()
     {
         mutex.lock();
