@@ -9,15 +9,17 @@ class Node
 public:
     int value;
     Node* next;
-    std::mutex mutex;
 
+    // Constructor
     Node(int value)
     {
         this->value = value;
         this->next = nullptr;
     }
+    // Default destructor
     ~Node() {};
 
+    // For printing a node
     friend std::ostream& operator<<(std::ostream& os, Node* const& node)
     {
         os << (node == nullptr ? "(null)" : std::to_string(node->value));
@@ -33,12 +35,13 @@ private:
     std::mutex mutex;
 
 public:
+    // Constructor
     ConcurrentLinkedList()
     {
         this->head = nullptr;
         this->size = 0;
     }
-
+    // Destructor
     ~ConcurrentLinkedList()
     {
         Node* current = head;
@@ -85,6 +88,7 @@ public:
         mutex.unlock();
     }
 
+    // Remove head node in O(1) time, return value or -1 if list is empty
     int removeHead()
     {
         mutex.lock();
@@ -111,6 +115,7 @@ public:
         return value;
     }
 
+    // Return true if value exists in list, false otherwise
     bool contains(int value)
     {
         mutex.lock();
@@ -131,16 +136,19 @@ public:
         return false;
     }
 
+    // Return size of list
     int getSize()
     {
         return size;
     }
 
+    // Return true if list is empty, false otherwise
     bool isEmpty()
     {
         return size == 0;
     }
 
+    // For printing a list
     friend std::ostream& operator<<(std::ostream& os, ConcurrentLinkedList* const& list)
     {
         if (list == nullptr)
