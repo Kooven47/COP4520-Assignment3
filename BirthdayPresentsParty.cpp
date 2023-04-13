@@ -37,7 +37,7 @@ std::unordered_set<int> generateShuffledUnorderedSet(int size)
 }
 
 // Thread constructor was complaining, so I added &s here
-void completeTasks(int threadId, ConcurrentLinkedList& presentsChain, std::unordered_set<int>& giftBag, std::unordered_set<int>& cards)
+void completeTasks(int threadId, ConcurrentLinkedList& presentsChain, std::unordered_set<int>& giftBag, std::vector<int>& cards)
 {
     mutex.lock();
 
@@ -61,10 +61,10 @@ void completeTasks(int threadId, ConcurrentLinkedList& presentsChain, std::unord
             }
 
             // Grab first gift from gift bag (already shuffled)
-            std::unordered_set<int>::iterator it = giftBag.begin();
-            int value = *it;
+            auto firstGift = giftBag.begin();
+            int value = *firstGift;
             // Remove from gift bag
-            giftBag.erase(it);
+            giftBag.erase(firstGift);
             // Add it to chain
             presentsChain.add(value);
             // std::cout << "Present added for guest " << value << " by thread " << threadId << std::endl;
@@ -90,7 +90,7 @@ void completeTasks(int threadId, ConcurrentLinkedList& presentsChain, std::unord
                 continue;
             }
             // Write card for that guest <3
-            cards.insert(guest);
+            cards.emplace_back(guest);
             // std::cout << "Card written for guest " << guest << " by thread " << threadId << std::endl;
 
             mutex.unlock();
@@ -112,7 +112,7 @@ int main(void)
 
     ConcurrentLinkedList presentsChain;
     std::unordered_set<int> giftBag = generateShuffledUnorderedSet(NUM_GUESTS);
-    std::unordered_set<int> cards;
+    std::vector<int> cards;
     std::vector<std::thread> threads(NUM_THREADS);
 
     for (int i = 0; i < NUM_THREADS; i++)
