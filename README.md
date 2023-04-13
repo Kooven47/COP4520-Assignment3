@@ -9,13 +9,22 @@ g++ -o BirthdayPresentsParty -pthread BirthdayPresentsParty.cpp
 <br> ./BirthdayPresentsParty
 
 ## Proof of Correctness, Efficiency, and Experimental Evaluation
-I use a course-grained singly-linked list with a head pointer to represent the chain of presents for the Minotaur. Basically, the code is exactly like a normal linked list, but with a mutex/lock locking at the start of the add(), removeHead(), and contains() operations and then unlocking at the end. This works well due to the low levels of concurrency (only 4 elves/threads) and is easy to implement. The correctness for this problem is proved by the while loop running until a card has been written for every guest, ensuring no guest is left behind, and that extra cards are not written. When a present is added, it is removed from the giftbag and added to the presents chain, ensuring uniqueness. When a card is written, the present is removed from the chain and a card is written for that tag number, also ensuring uniqueness.
-<br> Runtimes averaged over ten trials on my computer without any printing, where N = NUM_GUESTS:
-<br> For N = 1,000:   2ms
-<br> For N = 10,000:  24.9ms
-<br> For N = 100,000: 262.5ms
-<br> For N = 250,000: 638.5ms
-<br> For N = 500,000: 1306.8ms
+I use a course-grained singly-linked list with a head pointer to represent the chain of presents for the Minotaur. Basically, the code is exactly like a normal linked list, but with a mutex/lock locking at the start of the add(), removeHead(), and contains() operations and then unlocking at the end. This works well due to the low levels of concurrency (only 4 elves/threads) and is easy to implement. 
+The correctness for this problem is proved by the while loop running until a card has been written for every guest, ensuring no guest is excluded, and that extra cards are not written. When a present is added, it is removed from the giftbag and added to the presents chain, ensuring uniqueness. I just grab the first element from the giftbag because it is already shuffled so it is basically equivalent to picking a random element, and is faster. When a card is written, the present is removed from the head of the chain (to have O(1) deletion from the linked list, improving efficency) and a card is written for that tag number, also ensuring uniqueness. 
+The problem describes the giftbag as an unordered bag, so unordered_set seemed natural to represent it. I initially fill the giftbag with all numbers from 0 - NUM_GUESTS, then shuffle it to represent the problem. 
+The ConcurrentLinkedList implementation I made currently has some methods that were not used for the problem, such as getSize(), and an overloaded printing operator for the list and the nodes. It also includes an unused contains() method, which seems like it would be useful for task #3. However, it was not necessary due to how I coded up task #1 and task #2. 
+The way I implemented the task ordering was by doing the thread ID modulus 2, so the elves start off alternating tasks (elf 0 doing task 1, elf 1 doing task 2, elf 3 doing task 1, and elf 4 doing task 2). Then, when an elf is done with their task, I increment their current task number by 1, and then modulus by 2. This ensures that they switch to the other task. Also, note that when I say task 1 and 2, they are represented as task 0 and 1 in my code to make the math cleaner.
+
+Currently, I only print the runtime for this problem. I however left commented out print statements after every task, so those can be uncommented if they wish to be displayed. However, they slow the code down dratically for larger numbers of guests.
+
+Originally, I removed a random element from the linked list instead of just the head for task 2, but switching to remove head significantly improved runtime (O(n) -> O(1)). Switching the cards from the original unordered_set I used to a vector improved runtime by about 20%.
+
+Runtimes averaged over ten trials on my computer without any printing besides runtime, where N = NUM_GUESTS:
+<br> For N = 1,000:   1.9ms
+<br> For N = 10,000:  19.1ms
+<br> For N = 100,000: 194.4ms
+<br> For N = 250,000: 480.7ms
+<br> For N = 500,000: 967.9ms
 
 ## Problem 2: Atmospheric Temperature Reading Module (50 points)
 You are tasked with the design of the module responsible for measuring the atmospheric temperature of the next generation Mars Rover, equipped with a multicore CPU and 8 temperature sensors. The sensors are responsible for collecting temperature readings at regular intervals and storing them in shared memory space. The atmospheric temperature module has to compile a report at the end of every hour, comprising the top 5 highest temperatures recorded for that hour, the top 5 lowest temperatures recorded for that hour, and the 10-minute interval of time when the largest temperature difference was observed. The data storage and retrieval of the shared memory region must be carefully handled, as we do not want to delay a sensor and miss the interval of time when it is supposed to conduct temperature reading. Design and implement a solution using 8 threads that will offer a solution for this task. Assume that the temperature readings are taken every 1 minute. In your solution, simulate the operation of the temperature reading sensor by generating a random number from -100F to 70F at every reading. In your report, discuss the efficiency, correctness, and progress guarantee of your program.
@@ -25,10 +34,16 @@ g++ -o AtmosphericTemperatureReadingModule -pthread AtmosphericTemperatureReadin
 <br> ./AtmosphericTemperatureReadingModule
 
 ## Proof of Correctness, Efficiency, and Experimental Evaluation
+The correctness for this problem is proved by looping through every minute for every hour, so as many reports as needed are generated. Every minute, each sensor/thread fills its allocated index with the reading (randomly generated number from -100 to 70), and then waits for all other sensors to finish their reading in that minute. This will not infinite loop and progress is still guaranteed because the sensors have no way of getting stuck. They will eventually all generate a random number for their reading and report that they finished for that minute.
+At the end of the hour, the reporting thread (thread 0) generates the report. Every thread/sensor is allocated 60 indices in the array, so each sensor/thread can only touch its own indices. This ensures that no two threads are touching the same index at the same time, and that no thread is touching an index that is not its own, thereby preventing race conditions. 
+For printing the largest difference, I iterate through every 10 minute interval and find the largest difference between the highest and lowest temperature in that interval. I then print the interval and the difference. For printing the top 5 highest and lowest temperatures, I sort the array and then print the first 5 and last 5 elements.
+
+I initially thought of doing a 2D vector of size NUM_THREADS * MINUTES, but soon realized that getting the top 5 lowest and highest temperatures would be a much bigger pain. I changed to using a 1D array where every thread was only allowed to touch 60 indices (1 for every minute). Also, I had the thread sleep for 10 ms if the code said that not all sensors were done taking a reading for that minute, but changed it to 5 ms becuase it was more reasonable and improved the code efficiency.
+
 I decided to let the sensors measure for 24 hours because one day makes the most sense, but that can be changed by editing the HOURS defined at the top of the program.
-<br> Runtimes averaged over ten trials on my computer without any printing, where N = HOURS:
-<br> For N = 8:  42ms
-<br> For N = 12: 60.6ms
-<br> For N = 24: 119.1ms
-<br> For N = 120: ms
-<br> For N = 240: ms
+<br> Runtimes averaged over ten trials on my computer without any printing besides runtime, where N = HOURS:
+<br> For N = 8:   47.2ms
+<br> For N = 12:  83.8ms
+<br> For N = 24:  130.1ms
+<br> For N = 120: 576.9ms
+<br> For N = 240: 1123.9ms

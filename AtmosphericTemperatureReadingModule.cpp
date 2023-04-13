@@ -155,7 +155,6 @@ void measureTemperature(int threadId, std::vector<int>& sensorReadings, std::vec
     {
         for (int currentMinute = 0; currentMinute < MINUTES; currentMinute++) 
         {
-            
             sensorsFinishedCurrentReading[threadId] = false;
             
             // Gets first minute/reading index of current sensor and assigns it the current minute's randomly generated reading
