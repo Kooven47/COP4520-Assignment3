@@ -49,59 +49,51 @@ void completeTasks(int threadId, ConcurrentLinkedList& presentsChain, std::unord
 
     while (cards.size() < NUM_GUESTS)
     {
-        switch (currentThreadTask)
+        // Take gift from gift bag, add it to list
+        if (currentThreadTask == ADD_PRESENT)
         {
-            // Take gift from gift bag, add it to list
-            case ADD_PRESENT:
+            mutex.lock();
+
+            if (giftBag.empty())
             {
-                mutex.lock();
-
-                if (giftBag.empty())
-                {
-                    mutex.unlock();
-                    continue;
-                }
-
-                // Grab first gift from gift bag (already shuffled)
-                std::unordered_set<int>::iterator it = giftBag.begin();
-                int value = *it;
-                // Remove from gift bag
-                giftBag.erase(it);
-                // Add it to chain
-                presentsChain.add(value);
-                
-                // std::cout << "Present added for guest " << value << " by thread " << threadId << std::endl;
-
                 mutex.unlock();
-
-                break;
+                continue;
             }
-            // Take gift from list, write card for guest
-            case WRITE_CARD:
+
+            // Grab first gift from gift bag (already shuffled)
+            std::unordered_set<int>::iterator it = giftBag.begin();
+            int value = *it;
+            // Remove from gift bag
+            giftBag.erase(it);
+            // Add it to chain
+            presentsChain.add(value);
+            // std::cout << "Present added for guest " << value << " by thread " << threadId << std::endl;
+
+            mutex.unlock();
+        }
+        // Take gift from list, write card for guest
+        else if (currentThreadTask == WRITE_CARD)
+        {
+            mutex.lock();
+
+            if (presentsChain.isEmpty())
             {
-                mutex.lock();
-
-                if (presentsChain.isEmpty())
-                {
-                    mutex.unlock();
-                    continue;
-                }
-
-                // Remove first present from chain, ensuring there is something valid to remove
-                int guest = presentsChain.removeHead();
-                if (guest == -1)
-                {
-                    mutex.unlock();
-                    continue;
-                }
-                // Write card for that guest <3
-                cards.insert(guest);
-                
-                // std::cout << "Card written for guest " << guest << " by thread " << threadId << std::endl;
-
                 mutex.unlock();
-                break;
+                continue;
             }
+
+            // Remove first present from chain, ensuring there is something valid to remove
+            int guest = presentsChain.removeHead();
+            if (guest == -1)
+            {
+                mutex.unlock();
+                continue;
+            }
+            // Write card for that guest <3
+            cards.insert(guest);
+            // std::cout << "Card written for guest " << guest << " by thread " << threadId << std::endl;
+
+            mutex.unlock();
         }
 
         mutex.lock();
