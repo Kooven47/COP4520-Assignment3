@@ -9,6 +9,13 @@ g++ -o BirthdayPresentsParty -pthread BirthdayPresentsParty.cpp
 <br> ./BirthdayPresentsParty
 
 ## Proof of Correctness, Efficiency, and Experimental Evaluation
+I use a course-grained singly-linked list with a head pointer to represent the chain of presents for the Minotaur. Basically, the code is exactly like a normal linked list, but with a mutex/lock locking at the start of the add(), removeHead(), and contains() operations and then unlocking at the end. This works well due to the low levels of concurrency (only 4 elves/threads) and is easy to implement. The correctness for this problem is proved by the while loop running until a card has been written for every guest, ensuring no guest is left behind, and that extra cards are not written. When a present is added, it is removed from the giftbag and added to the presents chain, ensuring uniqueness. When a card is written, the present is removed from the chain and a card is written for that tag number, also ensuring uniqueness.
+<br> Runtimes averaged over ten trials on my computer without any printing, where N = NUM_GUESTS:
+<br> For N = 1,000:   2ms
+<br> For N = 10,000:  24.9ms
+<br> For N = 100,000: 262.5ms
+<br> For N = 250,000: 638.5ms
+<br> For N = 500,000: 1306.8ms
 
 ## Problem 2: Atmospheric Temperature Reading Module (50 points)
 You are tasked with the design of the module responsible for measuring the atmospheric temperature of the next generation Mars Rover, equipped with a multicore CPU and 8 temperature sensors. The sensors are responsible for collecting temperature readings at regular intervals and storing them in shared memory space. The atmospheric temperature module has to compile a report at the end of every hour, comprising the top 5 highest temperatures recorded for that hour, the top 5 lowest temperatures recorded for that hour, and the 10-minute interval of time when the largest temperature difference was observed. The data storage and retrieval of the shared memory region must be carefully handled, as we do not want to delay a sensor and miss the interval of time when it is supposed to conduct temperature reading. Design and implement a solution using 8 threads that will offer a solution for this task. Assume that the temperature readings are taken every 1 minute. In your solution, simulate the operation of the temperature reading sensor by generating a random number from -100F to 70F at every reading. In your report, discuss the efficiency, correctness, and progress guarantee of your program.
@@ -18,3 +25,10 @@ g++ -o AtmosphericTemperatureReadingModule -pthread AtmosphericTemperatureReadin
 <br> ./AtmosphericTemperatureReadingModule
 
 ## Proof of Correctness, Efficiency, and Experimental Evaluation
+I decided to let the sensors measure for 24 hours because one day makes the most sense, but that can be changed by editing the HOURS defined at the top of the program.
+<br> Runtimes averaged over ten trials on my computer without any printing, where N = HOURS:
+<br> For N = 8:  42ms
+<br> For N = 12: 60.6ms
+<br> For N = 24: 119.1ms
+<br> For N = 120: ms
+<br> For N = 240: ms
