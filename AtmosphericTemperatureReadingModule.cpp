@@ -168,7 +168,7 @@ void measureTemperature(int threadId, std::vector<int>& sensorReadings, std::vec
             // Helps ensure synchronized temperature readings
             while (!allsensorsFinishedCurrentReading(threadId, sensorsFinishedCurrentReading)) 
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
         }
         // Only have one thread (the first one) generate the report
