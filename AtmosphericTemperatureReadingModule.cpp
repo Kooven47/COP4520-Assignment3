@@ -180,7 +180,7 @@ void measureTemperature(int threadId, std::vector<int>& sensorReadings, std::vec
     }
 }
 
-int main() 
+int main(void) 
 {
     auto start = std::chrono::high_resolution_clock::now();
 
