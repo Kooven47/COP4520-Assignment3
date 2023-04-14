@@ -17,7 +17,7 @@ The way I implemented the task ordering was by doing the thread ID modulus 2, so
 
 Currently, I only print the runtime for this problem. I however left commented out print statements after every task, so those can be uncommented if they wish to be displayed. However, they slow the code down dratically for larger numbers of guests.
 
-Originally, I removed a random element from the linked list instead of just the head for task 2, but switching to removing the head significantly improved runtime (O(n) -> O(1)). Switching the cards from the original unordered_set I used to a vector improved runtime by about 20%.
+Originally, I removed a random element from the linked list instead of just the head for task 2, but switching to removing the head significantly improved runtime (O(n) -> O(1)). Switching the cards implementation from unordered_set to a vector improved runtime by about 20%.
 
 Runtimes averaged over ten trials on my computer without any printing besides runtime, where N = NUM_GUESTS:
 <br> For N = 1,000:   1.9ms
