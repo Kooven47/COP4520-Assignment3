@@ -17,7 +17,7 @@
 
 std::mutex mutex;
 
-void printHighestTemperatures(std::vector<int>& sensorReadings) 
+void printFiveHighestTemperatures(std::vector<int>& sensorReadings) 
 {
     // Check for unique temperatures, not needed if uniqueness not needed
     std::set<int> fiveHighestTemperatures;
@@ -45,7 +45,7 @@ void printHighestTemperatures(std::vector<int>& sensorReadings)
     }
 }
 
-void printLowestTemperatures(std::vector<int>& sensorReadings) 
+void printFiveLowestTemperatures(std::vector<int>& sensorReadings) 
 {
     // Check for unique temperatures, not needed if uniqueness not needed
     std::set<int> fiveLowestTemperatures;
@@ -72,7 +72,7 @@ void printLowestTemperatures(std::vector<int>& sensorReadings)
     }
 }
 
-void printLargestDifference(std::vector<int>& sensorReadings) 
+void printTenMinuteLargestDifference(std::vector<int>& sensorReadings) 
 {
     // 10 minute interval
     int intervalSize = 10;
@@ -115,12 +115,12 @@ void generateReport(int hour, std::vector<int>& sensorReadings)
     std::cout << "--------------" << std::endl;
 
     // Have to print difference first because sorting is done for next two prints, and that would mess this up
-    printLargestDifference(sensorReadings);
+    printTenMinuteLargestDifference(sensorReadings);
 
     std::sort(sensorReadings.begin(), sensorReadings.end());
 
-    printHighestTemperatures(sensorReadings);
-    printLowestTemperatures(sensorReadings);
+    printFiveHighestTemperatures(sensorReadings);
+    printFiveLowestTemperatures(sensorReadings);
 
     std::cout << std::endl;
 }
